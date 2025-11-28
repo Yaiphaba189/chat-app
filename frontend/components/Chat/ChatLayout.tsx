@@ -44,7 +44,7 @@ export default function ChatLayout({ session }: ChatLayoutProps) {
                     // Store keys locally
                     localStorage.setItem("privateKey", JSON.stringify(privateKeyJwk));
                     localStorage.setItem("publicKey", publicKeyBase64);
-                    console.log("✅ New keys generated and stored locally");
+                    console.log("New keys generated and stored locally");
                 }
 
                 // Upload public key to server (ensure DB is in sync)
@@ -63,12 +63,12 @@ export default function ChatLayout({ session }: ChatLayoutProps) {
                     // Let's alert but continue.
                     console.warn("Could not sync public key to server. Others may not be able to message you.");
                 } else {
-                    console.log("✅ Public key uploaded successfully");
+                    console.log("Public key uploaded successfully");
                 }
 
                 setKeysGenerated(true);
             } catch (error) {
-                console.error("❌ Error setting up keys:", error);
+                console.error("Error setting up keys:", error);
                 // Only clear if it was a generation error, not a network error?
                 // For safety, if things are broken, clearing might help next time.
                 // But let's be careful not to wipe keys on simple network failure.
