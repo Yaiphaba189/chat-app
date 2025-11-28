@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# E2EE Chat Application
 
-## Getting Started
+A secure, real-time chat application featuring **End-to-End Encryption (E2EE)**, built with Next.js, Socket.IO, and PostgreSQL.
 
-First, run the development server:
+## 🚀 Features
 
+-   **End-to-End Encryption**: Messages are encrypted on the client-side using **RSA-OAEP** (for key exchange) and **AES-GCM** (for message encryption).
+    -   **Self-Decryption**: Messages are encrypted for both the recipient and the sender, allowing you to read your own sent messages across sessions.
+    -   **Secure Key Management**: Private keys are stored locally (localStorage for MVP), public keys are exchanged via the server.
+-   **Real-time Messaging**: Powered by a standalone **Socket.IO** server.
+-   **Authentication**: Secure Email/Password login using **NextAuth.js** (Credentials Provider).
+-   **Modern UI**: Built with **Tailwind CSS** and **Lucide Icons** for a sleek, dark-mode interface.
+-   **Room Management**: Create 1:1 chats with other users.
+
+## 🛠 Tech Stack
+
+-   **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4
+-   **Backend**: Node.js, Socket.IO Server
+-   **Database**: PostgreSQL, Prisma ORM
+-   **Security**: Web Crypto API (Native browser standard)
+
+## 🏗 Architecture
+
+The project is split into two parts:
+
+1.  **`frontend/`**: The Next.js application handling the UI, Authentication, and API routes.
+2.  **`backend/`**: A dedicated Node.js server running Socket.IO for real-time communication.
+
+Both services connect to the same PostgreSQL database via Prisma.
+
+## 🏁 Getting Started
+
+### Prerequisites
+   ```bash
+   # Backend
+   cd backend
+   npm install
+   npx prisma generate
+   
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
+
+### Running Locally
+
+**Terminal 1 - Backend:**
 ```bash
+cd backend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+(Runs on `http://localhost:4000`)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+(Runs on `http://localhost:3000`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Visit `http://localhost:3000` to use the app.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Deployment
+1. Deploy backend to a VPS or service supporting WebSockets (Railway, Render, etc.)
+2. Deploy frontend to Vercel, Netlify, or similar
+3. Update frontend Socket.IO URL in `frontend/hooks/useSocket.ts` to point to your backend URL
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security Note
+Private keys are stored in `localStorage` for this MVP. For production, use `IndexedDB` or a more secure storage mechanism.

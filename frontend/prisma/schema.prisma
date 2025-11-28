@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  image         String?
+  password      String?   // Hashed password
+  publicKey     String?   // Base64 encoded RSA Public Key
+  createdAt     DateTime  @default(now())
+  
+  messagesSent  Message[]
+  rooms         RoomMember[]
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String?  // Null for DM
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  members   RoomMember[]
+  messages  Message[]
+}
+
+model RoomMember {
+  id        String   @id @default(cuid())
+  userId    String
+  roomId    String
+  joinedAt  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  content         String   // Encrypted content (Base64)
+  encryptedKey    String   // Encrypted AES key (Base64)
+  iv              String   // Initialization Vector (Base64)
+  senderId        String
+  roomId          String
+  createdAt       DateTime @default(now())
+  
+  sender          User     @relation(fields: [senderId], references: [id])
+  room            Room     @relation(fields: [roomId], references: [id])
+}
