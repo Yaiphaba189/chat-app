@@ -51,6 +51,15 @@ model Message {
   roomId          String
   createdAt       DateTime @default(now())
   
+  type            MessageType @default(TEXT)
+  fileName        String?
+
   sender          User     @relation(fields: [senderId], references: [id])
   room            Room     @relation(fields: [roomId], references: [id])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
 }

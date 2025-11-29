@@ -1,52 +1,42 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password } = await req.json();
+        const body = await req.json();
+        const { email, password, name } = body;
 
-        if (!email || !password || !name) {
+        if (!email || !password) {
             return NextResponse.json(
-                { error: "Missing required fields" },
+                { error: "Email and password are required" },
                 { status: 400 }
             );
         }
 
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
+        // Call backend API
+        const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password, name }),
         });
 
-        if (existingUser) {
+        const data = await response.json();
+
+        if (!response.ok) {
             return NextResponse.json(
-                { error: "User already exists" },
-                { status: 400 }
+                { error: data.error || "Registration failed" },
+                { status: response.status }
             );
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-                image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`, // Random avatar
-            },
-        });
-
-        return NextResponse.json({
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-            },
-        });
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         console.error("Registration error:", error);
         return NextResponse.json(
-            { error: "Internal Server Error" },
+            { error: "Internal server error" },
             { status: 500 }
         );
     }

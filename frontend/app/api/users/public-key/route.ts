@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -17,12 +18,28 @@ export async function POST(req: Request) {
     }
 
     try {
-        const user = await prisma.user.update({
-            where: { email: session.user.email },
-            data: { publicKey },
+        // Call backend API
+        const response = await fetch(`${BACKEND_URL}/api/users/public-key`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: session.user.email,
+                publicKey,
+            }),
         });
 
-        return NextResponse.json({ success: true, user });
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: data.error || "Failed to update public key" },
+                { status: response.status }
+            );
+        }
+
+        return NextResponse.json({ success: true, user: data });
     } catch (error) {
         console.error("Error updating public key:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

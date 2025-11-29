@@ -1,75 +1,57 @@
 "use client";
 
-import { MessageSquare, Clock, Star, CheckSquare, LayoutDashboard, AlertCircle, Share2, Calendar, Users, HelpCircle, Settings, LogOut } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { MessageSquare, Settings, LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navigation() {
-    const { data: session } = useSession();
+    const router = useRouter();
+    const pathname = usePathname();
 
     const navItems = [
-        { icon: MessageSquare, label: "Chat", active: true },
-        { icon: Clock, label: "Recent" },
-    ];
-
-    const otherItems = [
-        { icon: Settings, label: "Settings" },
+        { icon: MessageSquare, label: "Chat", path: "/" },
     ];
 
     return (
-        <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full overflow-y-auto">
-            {/* User Profile Header */}
-            <div className="p-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                    {session?.user?.image ? (
-                        <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold">
-                            {session?.user?.name?.[0] || "U"}
-                        </div>
-                    )}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{session?.user?.name || "User"}</h3>
+        <div className="w-19 bg-white border-r border-gray-100 flex flex-col items-center h-full py-6 px-3">
+            {/* Logo */}
+            <div className="mb-8">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-200">
+                    S
                 </div>
             </div>
 
-            <div className="flex-1 px-4 space-y-8">
-                {/* Main Nav */}
-                <div className="space-y-1">
-                    {navItems.map((item) => (
+            {/* Main Nav */}
+            <div className="flex-3 w-full px-3 space-y-4">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.path;
+                    return (
                         <button
                             key={item.label}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${item.active
-                                    ? "bg-white text-gray-900 shadow-sm border border-gray-100"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            onClick={() => router.push(item.path)}
+                            className={`w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-200 group relative ${isActive
+                                ? "text-indigo-600 bg-indigo-50"
+                                : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                                 }`}
                         >
-                            <item.icon className={`w-5 h-5 ${item.active ? "text-gray-900" : "text-gray-400"}`} />
-                            {item.label}
+                            <item.icon className={`w-5 h-5 ${isActive ? "fill-current" : ""}`} strokeWidth={isActive ? 0 : 2} />
+                            {isActive && (
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-indigo-600 rounded-l-full translate-x-3" />
+                            )}
                         </button>
-                    ))}
-                </div>
+                    );
+                })}
+            </div>
 
-                {/* Other Items */}
-                <div className="space-y-1 pb-6 mt-auto">
-                    {otherItems.map((item) => (
-                        <button
-                            key={item.label}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                        >
-                            <item.icon className="w-5 h-5 text-gray-400" />
-                            {item.label}
-                        </button>
-                    ))}
-
-                    <button
-                        onClick={() => signOut()}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-4"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        Log Out
-                    </button>
-                </div>
+            {/* Bottom Actions */}
+            <div className="w-full px-3 mt-auto">
+                <button
+                    onClick={() => signOut()}
+                    className="w-full aspect-square flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors shadow-sm"
+                    title="Sign Out"
+                >
+                    <LogOut className="w-5 h-5" />
+                </button>
             </div>
         </div>
     );

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 export async function GET(
     req: Request,
@@ -15,32 +16,27 @@ export async function GET(
     }
 
     try {
-        const room = await prisma.room.findUnique({
-            where: { id },
-            include: {
-                members: {
-                    include: {
-                        user: {
-                            select: { id: true, name: true, image: true, publicKey: true },
-                        },
-                    },
+        // Call backend API
+        const response = await fetch(
+            `${BACKEND_URL}/api/rooms/${id}?email=${encodeURIComponent(session.user.email)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-                messages: {
-                    orderBy: { createdAt: 'asc' },
-                    include: {
-                        sender: {
-                            select: { id: true, name: true, image: true },
-                        },
-                    },
-                },
-            },
-        });
+            }
+        );
 
-        if (!room) {
-            return NextResponse.json({ error: "Room not found" }, { status: 404 });
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: data.error || "Failed to fetch room" },
+                { status: response.status }
+            );
         }
 
-        return NextResponse.json(room);
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Error fetching room:", error);
         return NextResponse.json(

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -11,35 +12,27 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Get user ID first
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-        const rooms = await prisma.room.findMany({
-            where: {
-                members: {
-                    some: {
-                        userId: user.id,
-                    },
+        // Call backend API
+        const response = await fetch(
+            `${BACKEND_URL}/api/rooms?email=${encodeURIComponent(session.user.email)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            },
-            include: {
-                members: {
-                    include: {
-                        user: {
-                            select: { id: true, name: true, image: true },
-                        },
-                    },
-                },
-                messages: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 1,
-                }
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+            }
+        );
 
-        return NextResponse.json(rooms);
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: data.error || "Failed to fetch rooms" },
+                { status: response.status }
+            );
+        }
+
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Error fetching rooms:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -60,39 +53,29 @@ export async function POST(req: Request) {
     }
 
     try {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-        // Check if room already exists
-        // This is complex in Prisma for "exact match of members", but for 1:1 we can check if there's a room with both members and isGroup=false
-        const existingRoom = await prisma.room.findFirst({
-            where: {
-                isGroup: false,
-                AND: [
-                    { members: { some: { userId: user.id } } },
-                    { members: { some: { userId: partnerId } } },
-                ],
+        // Call backend API
+        const response = await fetch(`${BACKEND_URL}/api/rooms`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+                email: session.user.email,
+                otherUserId: partnerId,
+                isGroup: false,
+            }),
         });
 
-        if (existingRoom) {
-            return NextResponse.json(existingRoom);
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: data.error || "Failed to create room" },
+                { status: response.status }
+            );
         }
 
-        // Create new room
-        const room = await prisma.room.create({
-            data: {
-                isGroup: false,
-                members: {
-                    create: [
-                        { userId: user.id },
-                        { userId: partnerId },
-                    ],
-                },
-            },
-        });
-
-        return NextResponse.json(room);
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Error creating room:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

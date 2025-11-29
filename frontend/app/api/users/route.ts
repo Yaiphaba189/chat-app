@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -11,31 +12,27 @@ export async function GET(req: Request) {
     }
 
     try {
-        const currentUser = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+        // Call backend API
+        const response = await fetch(
+            `${BACKEND_URL}/api/users?email=${encodeURIComponent(session.user.email)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
 
-        if (!currentUser) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: data.error || "Failed to fetch users" },
+                { status: response.status }
+            );
         }
 
-        // Get all users except the current user
-        const users = await prisma.user.findMany({
-            where: {
-                id: { not: currentUser.id },
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-            },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-
-        return NextResponse.json(users);
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Error fetching users:", error);
         return NextResponse.json(
