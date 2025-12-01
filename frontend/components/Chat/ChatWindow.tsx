@@ -5,6 +5,7 @@ import { Session } from "next-auth";
 import { Socket } from "socket.io-client";
 import { Send, Paperclip } from "lucide-react";
 import { generateSessionKey, encryptMessage, decryptMessage, importPublicKey, importPrivateKey } from "@/lib/crypto";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface ChatWindowProps {
     socket: Socket | null;
@@ -250,13 +251,7 @@ export default function ChatWindow({ socket, session, roomId }: ChatWindowProps)
             {/* Header */}
             <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
                 <div className="w-10 h-10 rounded-xl bg-gray-200 overflow-hidden shadow-sm">
-                    {partnerImage ? (
-                        <img src={partnerImage} alt={partnerName} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-indigo-500 text-white font-bold text-base">
-                            {partnerName?.[0] || "U"}
-                        </div>
-                    )}
+                    <Avatar name={partnerName} image={partnerImage} className="w-full h-full" />
                 </div>
                 <div>
                     <h2 className="font-bold text-base text-gray-900">{partnerName}</h2>
@@ -278,13 +273,7 @@ export default function ChatWindow({ socket, session, roomId }: ChatWindowProps)
                             <div className={`flex gap-3 max-w-[75%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                                 {!isMe && (
                                     <div className="w-8 h-8 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0 mt-1">
-                                        {msg.sender?.image ? (
-                                            <img src={msg.sender.image} alt={msg.sender.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white text-xs font-bold">
-                                                {msg.sender?.name?.[0] || "U"}
-                                            </div>
-                                        )}
+                                        <Avatar name={msg.sender?.name} image={msg.sender?.image} className="w-full h-full" />
                                     </div>
                                 )}
                                 <div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, Plus, ArrowLeft, ChevronDown } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface SidebarProps {
     socket: any;
@@ -134,13 +135,7 @@ export default function Sidebar({ socket, session, onSelectRoom, selectedRoom }:
                                 className="w-full p-3 flex items-center gap-3 rounded-xl hover:bg-gray-50 transition-all group"
                             >
                                 <div className="w-10 h-10 rounded-xl bg-gray-200 overflow-hidden shrink-0">
-                                    {user.image ? (
-                                        <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-indigo-500 text-white font-bold text-base">
-                                            {user.name?.[0] || "U"}
-                                        </div>
-                                    )}
+                                    <Avatar name={user.name} image={user.image} className="w-full h-full" />
                                 </div>
                                 <div className="text-left">
                                     <h3 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{user.name}</h3>
@@ -166,13 +161,7 @@ export default function Sidebar({ socket, session, onSelectRoom, selectedRoom }:
                             >
                                 <div className="relative shrink-0">
                                     <div className="w-10 h-10 rounded-xl bg-gray-200 overflow-hidden shadow-sm">
-                                        {partner?.image ? (
-                                            <img src={partner.image} alt={partner.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-indigo-500 text-white font-bold text-base">
-                                                {partner?.name?.[0] || "U"}
-                                            </div>
-                                        )}
+                                        <Avatar name={partner?.name} image={partner?.image} className="w-full h-full" />
                                     </div>
                                     {/* Online indicator could go here */}
                                 </div>

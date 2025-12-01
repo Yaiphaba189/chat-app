@@ -1,8 +1,14 @@
 "use client";
 
 import { MessageSquare, Settings, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { Avatar } from "@/components/ui/Avatar";
+
+const ProfileAvatar = ({ className }: { className?: string }) => {
+    const { data: session } = useSession();
+    return <Avatar name={session?.user?.name} image={session?.user?.image} className={`${className} rounded-full`} />;
+};
 
 export default function Navigation() {
     const router = useRouter();
@@ -10,6 +16,7 @@ export default function Navigation() {
 
     const navItems = [
         { icon: MessageSquare, label: "Chat", path: "/" },
+        { icon: ProfileAvatar, label: "Profile", path: "/profile" },
     ];
 
     return (
