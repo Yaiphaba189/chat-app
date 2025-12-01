@@ -60,10 +60,6 @@ npm run dev
 
 Visit `http://localhost:3000` to use the app.
 
-### Deployment
-1. Deploy backend to a VPS or service supporting WebSockets (Railway, Render, etc.)
-2. Deploy frontend to Vercel, Netlify, or similar
-3. Update frontend Socket.IO URL in `frontend/hooks/useSocket.ts` to point to your backend URL
 
 ## Security Note
 Private keys are stored in `localStorage` for this MVP. For production, use `IndexedDB` or a more secure storage mechanism.
