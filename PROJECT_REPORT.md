@@ -129,12 +129,12 @@ graph LR
 ### DFD Level 1
 
 ```mermaid
-graph TD
+graph LR
     User((User))
 
     subgraph "Chat Application System"
         Auth[Authentication Module]
-        Chat[Chat Engine \n Socket.IO]
+        Chat[Chat Engine<br>Socket.IO]
         MsgHandler[Message Handler]
         FileHandler[File Upload Service]
         DB[(Database)]
@@ -159,11 +159,13 @@ graph TD
 
 ## 7. Entity Relationship (ER) Diagram
 
-Based on the Prisma Schema, the database structure is as follows:
+Based on the Prisma Schema, the database structure is as follows. (Represented horizontally)
 
 ```mermaid
-erDiagram
-    User {
+classDiagram
+    direction LR
+
+    class User {
         String id PK
         String name
         String email UK
@@ -173,21 +175,21 @@ erDiagram
         DateTime createdAt
     }
 
-    Room {
+    class Room {
         String id PK
         String name
         Boolean isGroup
         DateTime createdAt
     }
 
-    RoomMember {
+    class RoomMember {
         String id PK
         String userId FK
         String roomId FK
         DateTime joinedAt
     }
 
-    Message {
+    class Message {
         String id PK
         String content
         String encryptedKey
@@ -199,14 +201,14 @@ erDiagram
         DateTime createdAt
     }
 
-    User ||--o{ RoomMember : "is member of"
-    User ||--o{ Message : "sends"
+    User "1" --> "*" RoomMember : is member of
+    User "1" --> "*" Message : sends
 
-    Room ||--o{ RoomMember : "has members"
-    Room ||--o{ Message : "contains"
+    Room "1" --> "*" RoomMember : has members
+    Room "1" --> "*" Message : contains
 
-    RoomMember }o--|| User : "linked to"
-    RoomMember }o--|| Room : "linked to"
+    RoomMember "*" --> "1" User : linked to
+    RoomMember "*" --> "1" Room : linked to
 ```
 
 ## 8. System Workflow (Detailed)
