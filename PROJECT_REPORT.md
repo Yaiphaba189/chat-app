@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-This project is a secure, real-time chat application designed to facilitate seamless communication between users. It features end-to-end encryption capabilities (infrastructure ready), real-time messaging using WebSockets, and a modern, responsive user interface. The system supports direct messaging (DM) and group chats, along with file sharing capabilities.
+This project is a secure, real-time chat application designed to facilitate seamless communication between users. It features **End-to-End Encryption (E2EE)** to ensure complete privacy, real-time messaging using WebSockets, and a modern, responsive user interface. The system supports direct messaging (DM) and group chats, along with file sharing capabilities.
 
 ## 2. Methodology
 
@@ -11,7 +11,7 @@ The project follows an **Agile development methodology**, specifically adopting 
 - **Component-Based Architecture**: The frontend is built using reusable React components (e.g., `ChatLayout`, `MessageBubble`) to ensure maintainability and scalability.
 - **Separation of Concerns**: Clear separation between the client-side (Next.js) and server-side (Express.js) logic.
 - **Real-Time Event Driven**: The core communication logic is event-driven, utilizing Socket.IO for instant data transfer without polling.
-- **Security First**: The design incorporates encryption keys and secure authentication flows from the ground up.
+- **Security First**: The design incorporates **End-to-End Encryption (E2EE)** using RSA and AES standards to guarantee data privacy.
 
 ## 3. System Architecture
 
@@ -51,12 +51,60 @@ graph TD
     UI -- HTTP GET/POST --> API
     SocketClient -- WebSocket --> SocketServer
 
+
     API --> DB
     SocketServer --> DB
     AuthAPI --> DB
 ```
 
-## 4. Backend Implementation
+## 4. Security Architecture (E2EE)
+
+The application implements **End-to-End Encryption (E2EE)** using a Hybrid Encryption scheme (RSA + AES) to ensure that only the intended recipients can read messages. The server only stores encrypted data and never has access to the private keys or plaintext messages.
+
+### Encryption Mechanism
+
+1.  **Key Pair Generation**: Upon registration, every user generates an **RSA 2048-bit Key Pair** (Public/Private) in their browser.
+    - **Public Key**: Sent to the server and stored for other users to use.
+    - **Private Key**: Stored securely in the user's browser (IndexedDB/Local Storage) and **never leaves the client**.
+2.  **Message Encryption (Hybrid)**:
+    - **AES Key**: For every message, a random **AES-256 key** is generated.
+    - **Payload Encryption**: The message content is encrypted using this AES key.
+    - **Key Encryption**: The AES key itself is encrypted using the _Recipient's Public Key_.
+3.  **Decryption**:
+    - The Recipient downloads the encrypted message and the encrypted AES key.
+    - They use their **Private Key** to decrypt the AES key.
+    - They use the decrypted AES key to decrypt the message content.
+
+### E2EE Workflow Diagram
+
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Server
+    participant Recipient
+
+    note over Sender, Recipient: 1. Setup Phase
+    Recipient->>Recipient: Generate RSA Keys
+    Recipient->>Server: Upload Public Key
+
+    note over Sender, Recipient: 2. Sending Phase
+    Sender->>Server: Fetch Recipient's Public Key
+    Server-->>Sender: Return Public Key
+
+    Sender->>Sender: Generate Random AES Key
+    Sender->>Sender: Encrypt Message with AES Key
+    Sender->>Sender: Encrypt AES Key with Recipient's Public Key
+
+    Sender->>Server: Send (Encrypted Msg + Encrypted Key)
+
+    note over Sender, Recipient: 3. Receiving Phase
+    Server->>Recipient: Push (Encrypted Msg + Encrypted Key)
+    Recipient->>Recipient: Decrypt AES Key with Private Key
+    Recipient->>Recipient: Decrypt Message with AES Key
+    Recipient->>Recipient: Display Plaintext
+```
+
+## 5. Backend Implementation
 
 The backend is a robust Node.js application using TypeScript.
 
@@ -86,7 +134,7 @@ The backend is a robust Node.js application using TypeScript.
     - `send-message`: Receives a message, saves it to the DB via Prisma, and broadcasts it to the room.
     - `user-online`/`disconnect`: Tracks user presence.
 
-## 5. Frontend Implementation
+## 6. Frontend Implementation
 
 The frontend is a modern web application built with Next.js 16.
 
@@ -109,7 +157,7 @@ The frontend is a modern web application built with Next.js 16.
     - initializes a Socket.IO client connection on mount.
     - Listens for incoming messages and updates the UI state in real-time.
 
-## 6. Data Flow Diagrams
+## 7. Data Flow Diagrams
 
 ### DFD Level 0 (Context Diagram)
 
@@ -157,7 +205,7 @@ graph LR
     FileHandler -- 12. Save File --> DB
 ```
 
-## 7. Entity Relationship (ER) Diagram
+## 8. Entity Relationship (ER) Diagram
 
 Based on the Prisma Schema, the database structure is as follows. (Represented horizontally)
 
@@ -211,7 +259,7 @@ classDiagram
     RoomMember "*" --> "1" Room : linked to
 ```
 
-## 8. System Workflow (Detailed)
+## 9. System Workflow (Detailed)
 
 This diagram illustrates the flow of a user logging in and sending a message.
 
