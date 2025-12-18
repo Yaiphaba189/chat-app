@@ -20,38 +20,50 @@ This report documents the entire software development life cycle of the project,
 
 ## TABLE OF CONTENTS
 
-1.  **INTRODUCTION**
-    1.1 Secure Real-Time Chat System - Overview
-    1.2 Problem Statement
-    1.3 Project Objectives
-    1.4 Methodology and Workflow
-2.  **TECHNOLOGY STACK**
-    2.1 Hardware Requirements
-    2.2 Software Requirements
-    2.3 Development Tools & Frameworks
-    2.4 Software Development Life Cycle (SDLC)
-3.  **SYSTEM DESIGN**
-    3.1 Database Design & Schema
-    3.2 Entity-Relationship (ER) Diagram
-    3.3 Data Flow Diagrams
-4.  **SYSTEM IMPLEMENTATION**
-    4.1 Login Module
-    4.2 Chat Dashboard
-    4.3 Sidebar & Room List
-    4.4 Chat Interface
-    4.5 User Management
-    4.6 Connection Management
-    4.7 Room & File Management
-    4.8 Real-Time Messaging & E2EE Implementation
-    4.9 Logout Module
-5.  **RESULTS & ANALYSIS**
-    5.1 User Interface
-    5.2 Backend Functionality & API Handling
-    5.3 Performance Testing & Optimization
-6.  **CONCLUSION**
-    6.1 Summary of Achievements
-    6.2 Future Scope
-7.  **REFERENCES**
+**1. INTRODUCTION**
+
+- 1.1 Secure Real-Time Chat System - Overview
+- 1.2 Problem Statement
+- 1.3 Project Objectives
+- 1.4 Methodology and Workflow
+
+**2. TECHNOLOGY STACK**
+
+- 2.1 Hardware Requirements
+- 2.2 Software Requirements
+- 2.3 Development Tools & Frameworks
+- 2.4 Software Development Life Cycle (SDLC)
+
+**3. SYSTEM DESIGN**
+
+- 3.1 Database Design & Schema
+- 3.2 Entity-Relationship (ER) Diagram
+- 3.3 Data Flow Diagrams
+
+**4. SYSTEM IMPLEMENTATION**
+
+- 4.1 Login Module
+- 4.2 Chat Dashboard
+- 4.3 Sidebar & Room List
+- 4.4 Chat Interface
+- 4.5 User Management
+- 4.6 Connection Management
+- 4.7 Room & File Management
+- 4.8 Real-Time Messaging & E2EE Implementation
+- 4.9 Logout Module
+
+**5. RESULTS & ANALYSIS**
+
+- 5.1 User Interface
+- 5.2 Backend Functionality & API Handling
+- 5.3 Performance Testing & Optimization
+
+**6. CONCLUSION**
+
+- 6.1 Summary of Achievements
+- 6.2 Future Scope
+
+**7. REFERENCES**
 
 ---
 
@@ -231,17 +243,73 @@ The relationship between entities is defined as follows:
 - A **Room** can contain multiple **Messages** (1:N).
 - A **User** can be a member of multiple **Rooms**, and a **Room** can have multiple **Users** (M:N).
 
-_(See Visual Diagram in Artifact)_
+```mermaid
+classDiagram
+    direction LR
+
+    class User {
+        String id PK
+        String name
+        String email
+        String password
+        String publicKey
+    }
+
+    class Room {
+        String id PK
+        String name
+        Boolean isGroup
+    }
+
+    class Message {
+        String id PK
+        String content "AES Encrypted"
+        String encryptedKey "RSA Encrypted"
+        String senderId FK
+        String roomId FK
+    }
+
+    User "1" --> "*" Message : sends
+    Room "1" --> "*" Message : contains
+    User "*" --> "*" Room : joins
+```
 
 ### 3.3 Data Flow Diagrams
 
 The DFD illustrates how data moves through the information system.
 
-1.  **Input**: User types plaintext message.
-2.  **Process 1 (Client)**: App generates AES Key -> Encrypts Message -> Encrypts AES Key with Public Key.
-3.  **Process 2 (Network)**: Encrypted Payload sent via Socket.IO.
-4.  **Storage**: Encrypted Payload saved to PostgreSQL.
-5.  **Output**: Recipient receives payload -> Decrypts Key -> Decrypts Message -> Views Plaintext.
+**Context Level (Level 0):**
+
+```mermaid
+graph LR
+    User((User))
+    System[Secure Chat System]
+
+    User -- Login/Credentials --> System
+    User -- Send Message (Encrypted) --> System
+    System -- Auth Token --> User
+    System -- Receive Message (Encrypted) --> User
+```
+
+**Level 1 DFD:**
+
+```mermaid
+graph LR
+    User((User))
+
+    subgraph "System Boundary"
+        Auth[Auth Module]
+        Chat[Chat Engine]
+        DB[(PostgreSQL)]
+    end
+
+    User -- 1. Login --> Auth
+    Auth -- 2. Verify --> DB
+    User -- 3. WebSocket Connect --> Chat
+    User -- 4. Send Packet --> Chat
+    Chat -- 5. Store --> DB
+    Chat -- 6. BroadCast --> User
+```
 
 ---
 
@@ -270,7 +338,7 @@ The `ChatLayout` component uses CSS Grid/Flexbox to create a responsive 2-column
   3.  If Authenticated -> Emit `user-online` event.
   4.  Listen for global events (e.g., `new-notification`).
 
-### 4.3 Teacher/User Dashboard (Sidebar)
+### 4.3 Sidebar & Room List
 
 **Purpose**: Navigation and User/Room listing.
 **Implementation**:
@@ -278,7 +346,7 @@ Fetches the list of active conversations from `/api/rooms`. It sorts them by the
 
 - **Real-Time Status**: Subscribes to `user-online` events to toggle a CSS class (Green Dot) next to the user's avatar.
 
-### 4.4 Student/Chat Dashboard (Message View)
+### 4.4 Chat Interface
 
 **Purpose**: Display the conversation history.
 **Implementation**:
@@ -289,12 +357,19 @@ This is a scrollable container that renders a list of `MessageBubble` components
   - If Match -> Align Right (Blue Bubble).
   - If No Match -> Align Left (Gray Bubble).
 
-### 4.5 Management Modules (User/Student/Class)
+### 4.5 User Management
 
 - **Profile Management**: Allows users to update their avatar and bio.
+
+### 4.6 Connection Management
+
+Manages WebSocket connections in `server.ts`. It maintains `userSockets` Map to track online status.
+
+### 4.7 Room & File Management
+
 - **Room Creation**: Logic to create a new room. It checks if a DM already exists between two users; if so, it redirects to the existing room ID instead of creating a duplicate.
 
-### 4.8 Real-Time Messaging & E2EE Implementation (Take Attendance Module)
+### 4.8 Real-Time Messaging & E2EE Implementation
 
 This is the most critical module of the system.
 
@@ -324,21 +399,26 @@ function sendMessage(plainText, recipientPublicKey) {
 }
 ```
 
-#### 4.8.2 The Socket Transport
+#### 4.8.2 The Socket Transport - Sequence Diagram
 
 Once the packet is prepared, it is emitted.
 
-- **Client**: `socket.emit('send-message', packet)`
-- **Server**:
-  ```typescript
-  socket.on("send-message", async (data) => {
-    // 1. Validate Payload
-    // 2. Store to DB (Prisma.message.create)
-    const savedMsg = await db.message.create({ data });
-    // 3. Broadcast to Room
-    socket.to(data.roomId).emit("receive-message", savedMsg);
-  });
-  ```
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Server
+    participant Recipient
+
+    Sender->>Sender: AES Encrypt(Message)
+    Sender->>Sender: RSA Encrypt(AES Key)
+
+    Sender->>Server: Emit "send-message"
+    Server->>Server: Store in DB
+    Server->>Recipient: Broadcast "receive-message"
+
+    Recipient->>Recipient: RSA Decrypt(AES Key)
+    Recipient->>Recipient: AES Decrypt(Message)
+```
 
 #### 4.8.3 The Decryption Algorithm (Client-Side)
 
@@ -392,11 +472,6 @@ The backend proved robust during testing.
 | **TC-04**    | E2EE Integrity | Intercept Traffic   | Ciphertext (Unreadable)  | Ciphertext (Unreadable) | **PASS** |
 | **TC-05**    | Latency Test   | 1000 messages       | Average < 100ms          | 45ms Average            | **PASS** |
 
-**Optimization Techniques Applied:**
-
-1.  **React.memo**: Used on `MessageBubble` components to prevent re-rendering of the entire list when a new message arrives.
-2.  **Database Indexing**: Indexes added to `senderId` and `roomId` columns in PostgreSQL to speed up history retrieval.
-
 ---
 
 ## 6. CONCLUSION
@@ -414,9 +489,8 @@ This project successfully delivered a fully functional **Secure Real-Time Chat A
 The current system lays a solid foundation, but there are avenues for significant expansion:
 
 1.  **Mobile Application**: Developing a React Native version to provide a native mobile experience with Push Notifications.
-2.  **Group E2EE**: Implementing the **Sender Keys** component of the Signal Protocol to allow efficient encryption for large groups (currently, individual encryption is computationally expensive for large groups).
+2.  **Group E2EE**: Implementing the **Sender Keys** component of the Signal Protocol to allow efficient encryption for large groups.
 3.  **Media Streaming**: Integrating WebRTC to allow for encrypted Voice and Video calls directly within the app.
-4.  **Disappearing Messages**: Implementing a feature where messages automatically delete themselves from both devices after a set timer.
 
 ---
 
