@@ -195,7 +195,7 @@ To develop and deploy the application, the following hardware specifications are
 
 ### 2.4 Software Development Life Cycle (SDLC)
 
-The project strictly adhered to the SDLC phases. A key aspect was the **Feasibility Study** conducted during the planning phase, which confirmed that running 2048-bit RSA generation in the browser was performant enough for modern devices (taking < 1 second).
+The project strictly adhered to the SDLC phases. A key aspect was the **Feasibility Study** conducted during the planning phase, which confirmed that running 2048-bit RSA generation in the browser was performant enough for modern devices (taking < 1 second).it use Waterfall Model (Security-Driven Waterfall)
 
 ---
 
